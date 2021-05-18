@@ -1,0 +1,41 @@
+resources:
+  containers:
+    - container: test
+      image: wso2/choreo-connect-router:0.9.0
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+  - job: foo
+    container: test
+    steps:
+      - task: Docker@2
+        inputs:
+          containerRegistry: 'DockerHub-Renuka'
+          repository: 'apioperator/pipline-test'
+          command: 'build'
+          Dockerfile: '**/Dockerfile'
+      # - script: |
+      #     set -e
+      #     cd $(LINKER_REPO_PATH)
+      #     wget https://static.choreo.dev/ballerina/ballerina-swan-lake-preview5-c2c-patch.zip \
+      #     -O $(Agent.TempDirectory)/ballerina-swan-lake-preview5-c2c-patch.zip
+      #     unzip -q $(Agent.TempDirectory)/ballerina-swan-lake-preview5-c2c-patch.zip -d $(Agent.TempDirectory)
+      #     $(Agent.TempDirectory)/ballerina-swan-lake-preview5/bin/ballerina build -a --skip-tests
+      #     docker tag $(CONTAINER_REGISTRY)/$(REPOSITORY):latest $(CONTAINER_REGISTRY)/$(REPOSITORY):$(APP_VERSION)
+      #     mv $(LINKER_REPOSITORY_K8S_YAML_DIR_RELATIVE_PATH)/*.yaml $(LINKER_REPOSITORY_K8S_YAML_DIR_RELATIVE_PATH)/$(LINKER_K8S_YAML)
+      #   displayName: "Build docker image"
+      - task: Maven@3
+        inputs:
+          mavenPomFile: 'pom.xml'
+          mavenOptions: '-Xmx3072m'
+          javaHomeOption: 'JDKVersion'
+          jdkVersionOption: '1.8'
+          jdkArchitectureOption: 'x64'
+          publishJUnitResults: true
+          testResultsFiles: '**/surefire-reports/TEST-*.xml'
+          goals: 'package'
